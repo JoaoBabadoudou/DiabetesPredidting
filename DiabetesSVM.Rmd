@@ -1,0 +1,29 @@
+---
+title: "Predire le Diabete"
+author: "Joao BABADOUDOU"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Le diabète est un problème de sante publique majeur dans le monde entier, touchant des millions de personnes et ayant un impact significatif sur leur qualité de vie. Dans cette étude nous proposons une approche basée sur les machines a vecteurs de support (SVM) pour détecter la maladie. Pour cela nous allons utiliser des données récupérées sur Kaggle, présentant certaines caractéristiques tels que la pression sanguine ou la quantité d'insuline dans le sang de certaines personnes.
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+library(e1071)
+# Importons nos donnees
+df <- read_delim("diabetes.csv", delim = ";", 
+                       escape_double = FALSE, col_types = cols(Outcome = col_factor(levels = c("0", 
+                                                                                               "1"))), trim_ws = TRUE)
+```
+
+```{r}
+
+```
