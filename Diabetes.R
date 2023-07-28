@@ -7,11 +7,37 @@ library(neuralnet)
 
 # Importons nos donnees
 df <- read_delim("diabetes.csv", delim = ";", 
-                       escape_double = FALSE, col_types = cols(Outcome = col_factor(levels = c("0", 
-                                                                                               "1"))), trim_ws = TRUE)
-View(df)
+                 escape_double = FALSE,
+                 col_types = cols(Outcome = col_factor(levels = c("0", 
+                                          "1"))), trim_ws = TRUE)
 
+ 
 #### Analyse descriptive
+ 
+ 
+library(gt) 
+ library(skimr)
+ my_skim <- skim_with(numeric = sfl(p25 = NULL, p50 = NULL, p75 = NULL)) 
+ thyroid_df <- my_skim(df)
+ 
+ thyroid_df %>%
+   select(-skim_type)   %>% 
+   gt() %>%
+   cols_label(n_missing = "# Missing", complete_rate = "Completeness", 
+              numeric.mean = "Mean", numeric.sd = "Standard Deviation",
+              numeric.p0 = "Min", numeric.p100 = "Max",
+              numeric.hist = "Histogram") %>%
+   opt_stylize(style = 6, color = "cyan", add_row_striping = TRUE) %>%
+   tab_header(title = "Summary of Variables in df") 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 # Verifions s'il y a des valeurs manquantes
 sum(is.na(df))
 # Statistique sescriptive
@@ -54,6 +80,8 @@ gridExtra::grid.arrange(c2,d2,e2,f2,g2,h2,i2,j2)
 
 ggplot(df,aes(Outcome,Insulin))+ geom_boxplot(fill = "mediumpurple",colour = "black")
 
+ggplot(df, aes(Outcome))+geom_
+
 ggpairs(df, aes(colour = Outcome, alpha = 0.4))
  # traiter les outliers
 
@@ -80,12 +108,11 @@ test	<-	df[-train_indices,	]
 
 
 X_train <- train[,-9]
-Y_train <-  train[,9]
+Y_train <- to_categorical(train[,9])
 
 
 X_test <- test[,-9]
-Y_test <-  test[,9]
-
+Y_test <- to_categorical( test[,9])
 
 # #####
 # model<- neuralnet(Outcome~., data = train)
@@ -93,3 +120,5 @@ Y_test <-  test[,9]
 # model_results <- compute(model, test[1:8])
 # predicted_strength <- model_results$net.result
 # cor(predicted_strength, as.numeric( test$Outcome))
+
+
