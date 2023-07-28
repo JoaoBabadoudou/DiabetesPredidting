@@ -3,6 +3,7 @@ title: "Predire le Diabete"
 author: "Joao BABADOUDOU"
 date: "`r Sys.Date()`"
 output: pdf_document
+bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -32,7 +33,6 @@ df <- read_delim("diabetes.csv", delim = ";",
 
 ### **1-1) Présentation du jeu de données**
 
-
 ### **1-2) Analyse univariable**
 
 #### **1-2-1) Statistiques descriptives**
@@ -52,9 +52,7 @@ df <- read_delim("diabetes.csv", delim = ";",
    tab_header(title = "Summary of Variables in the diqbeyes data") 
 ```
 
-
-L'analyse du tableau nous permet de constater l'absence de valeurs manquantes et des ecarts-types généralement élevés, surtout pour la quantité d'Insuline dans le sang. 
-#### **1-2-2) Distribution des variables**
+L'analyse du tableau nous permet de constater l'absence de valeurs manquantes et des ecarts-types généralement élevés, surtout pour la quantité d'Insuline dans le sang. \#### **1-2-2) Distribution des variables**
 
 Affichons maintenant la distribution de chacune des variables exceptés la variable explicative.
 
@@ -96,14 +94,29 @@ gridExtra::grid.arrange(c2,d2,e2,f2,g2,h2,i2,j2)
 
 On peut constater que les variables ont pour la plupart une distribution asymétrique à gauche. C'est à dire que la majorité des valeurs de la variable est supérieure à la valeur moyenne. Il conviendra pour nous de procéder a une standardisation des données pour la suite des analyses
 
-
 #### **1-2-3) Variable explicatives**
-
 
 ### **1-3) Analyse multivariee**
 
+Sortons dans un premier temps une matrice de corrélation pour vérifier s'il y a des relations linéaires significatives entre les variables explicatives.
+
+```{r}
+ggcorr(df,low = "#104E8B",mid= "#FDF5E6", high="darkgreen", label = TRUE,label_size = 3)
+
+```
+
+Constatons que les variables **Age** et **Pregnancies** ont une relation linéaire plus ou moins forte. Concernant les autres variables la linéarité de leurs relation est négligeable au vu de la valeur des coefficients.
+
+Avec le fonction **ggpairs** de [@GGally] nous allons largement résumer notre analyse multivariée et tirer les informations nécessaires.
 
 ```{r}
 ggpairs(df, aes(colour = Outcome, alpha = 0.4))
 ```
 
+
+## **2- Modelisation**
+
+### **2-1) Preprocessing**
+
+
+ 
