@@ -21,6 +21,7 @@ library(ggplot2)
 library(gridExtra)
 library(GGally)
 library(e1071)
+library(caret)
 library(gt) 
 library(skimr)
 # Importons nos données
@@ -101,22 +102,86 @@ On peut constater que les variables ont pour la plupart une distribution asymét
 Sortons dans un premier temps une matrice de corrélation pour vérifier s'il y a des relations linéaires significatives entre les variables explicatives.
 
 ```{r}
-ggcorr(df,low = "#104E8B",mid= "#FDF5E6", high="darkgreen", label = TRUE,label_size = 3)
+ggcorr(df[,-9],low = "#104E8B",mid= "#FDF5E6", high="darkgreen", label = TRUE,label_size = 3)
 
 ```
 
 Constatons que les variables **Age** et **Pregnancies** ont une relation linéaire plus ou moins forte. Concernant les autres variables la linéarité de leurs relation est négligeable au vu de la valeur des coefficients.
 
+
 Avec le fonction **ggpairs** de [@GGally] nous allons largement résumer notre analyse multivariée et tirer les informations nécessaires.
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 ggpairs(df, aes(colour = Outcome, alpha = 0.4))
 ```
 
 
+ Quand on analyse la densité de chacune des variables repartit suivant **Outcome** , on constate un déphasage entre les courbes de **1** et celles de **0**. En effet ses figures, posées en diagonale, montrent que toutes les variables choisies sont importante dans la détection du diabète. On peut néanmoins remarquer que la quantité de glucose dans le sang et l'age sont des facteurs déterminant du diabète.
 ## **2- Modelisation**
 
 ### **2-1) Preprocessing**
 
+Ici, nous allons préparer nos données a être utiliser dans le modèle. La première étape sera la normalisation des données. 
 
- 
+**Normalisation des donnees**
+
+Une étape	très importante consiste	à	normaliser d’abord les valeurs des variables quantitatives. Toutes les mesures seront alors placées sur un	pied	d’égalité. Du	 coup, si certaines d’entre elles sont très petites, elles ne seront pas « oubliées »	parmi d'autres mesures bien plus grandes.
+Nous allons utiliser la normalisation min-max. Ce processus transforme les variables de sorte que toutes les valeurs se situent dans la plage comprise entre 0 et 1.
+
+
+```{r}
+normalize <- function(x) {
+  return((x - min(x)) / (max(x) - min(x))) 
+}
+
+df[,1:8] <- apply(df[,1:8],MARGIN = 2 , FUN = normalize)
+
+```
+
+
+**Séparation des donnes en données d'apprentissage et donnes de test**
+
+Nous allons séparer nos donnees en deux partie. Réservons 75% pour l’entraînement et donc 25% pour le test du modèle
+
+```{r}
+
+split_size	=	0.75
+sample_size	=	floor(split_size	*	nrow(df)) 
+set.seed(123)
+train_indices	<-	sample(seq_len(nrow(df)),	size	=	
+                          sample_size)
+train	<-	df[train_indices,	] 
+test	<-	df[-train_indices,	]
+```
+
+
+### **2-1) Entrainement du modele**
+
+ Nous allons faire recourt à la fonction **train** du package [@caret] pour trouver notre modèle. A l'aide de la recherche aléatoire et d'une cross validation nous allons déterminer les paramètres de notre modèle. En effet, la recherche aléatoire est souvent efficace, car elle explore l'espace des hyperparamètres de manière aléatoire plutôt que de manière systématique comme la recherche simple. Cela permet de couvrir une plus grande variété de combinaisons d'hyperparamètres en moins d'itérations.
+
+
+```{r}
+grid <- expand.grid(C = runif(20, 0.1, 10), kernel = c('linear', 'radial'))
+
+
+Tuned_model <- train(Outcome ~ ., data = train, method = 'svmRadial', tuneGrid = grid, trControl = 
+trainControl(method = 'cv', number = 5))
+
+
+
+
+```
+
+
+```{r}
+
+
+tuned_model <- tune(svm, Outcome ~ ., data = train, kernel ='linear', ranges = list(C = runif(20, 0.1, 10)), 
+tunecontrol = tune.control(sampling = "cross", cross = 5))
+
+best_C <- tuned_model$best.parameters$C
+best_kernel <- tuned_model$best.parameters$kernel
+# Afficher les meilleurs hyperparamètres trouvés 
+print(tuned_model$best.parameters$)
+```
+
