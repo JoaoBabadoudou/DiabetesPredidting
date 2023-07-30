@@ -2,7 +2,10 @@
 title: "Prédire le Diabète"
 author: "Joao BABADOUDOU"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: 
+  pdf_document: 
+    toc: yes
+    number_sections: yes
 bibliography: references.bib
 ---
 
@@ -206,3 +209,5 @@ Pour l'évaluation du modèle, on ne va pas utiliser uniquement l'exactitude, co
 Le **recall** de notre modèle est de **92.16%**. Cela signifie que le modèle arrive à prédire correctement les cas de diabète. Autrement, il y a de forte chance que le modèle prédise le diabète chez quelqu'un qui l'a réellement. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$ $$a=52 $$ %
 
 Globalement le modèle estimé permet d'avoir de bonne prédictions sur l'ensemble de données en prenant comme métrique le **Recall** et la **F1**.
+
+## 
