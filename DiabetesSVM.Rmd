@@ -1,19 +1,19 @@
 ---
 title: "Prédire le Diabète"
-documentclass:    article 
-classoption:    a4paper
 author: "Joao BABADOUDOU"
 date: "`r Sys.Date()`"
 output: 
   pdf_document: 
     toc: yes
-    number_sections: yes
+    number_sections: no
 bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## 1-Contexte
 
 Le diabète est un problème de santé publique majeur dans le monde entier, touchant des millions de personnes et ayant un impact significatif sur leur qualité de vie. Dans cette étude nous proposons une approche basée sur les machines a vecteurs de support (SVM) pour détecter la maladie. Pour cela nous allons utiliser des données récupérées sur **Kaggle**, présentant certaines caractéristiques tels que la pression sanguine ou la quantité d'insuline dans le sang de certaines personnes.
 
@@ -25,27 +25,32 @@ library(dplyr)
 library(ggplot2)
 library(gridExtra)
 library(GGally)
+library(gt)
 library(e1071)
 library(caret)
-library(gt) 
 library(skimr)
+library(DALEX)
 # Importons nos données
 df <- read_delim("diabetes.csv", delim = ";", 
                        escape_double = FALSE, col_types = cols(Outcome = col_factor(levels = c("0", 
                                                                                                "1"))), trim_ws = TRUE)
 ```
 
-## **Analyse exploratoire des données**
+## **2-Analyse exploratoire des données**
 
-### **Présentation du jeu de données**
+### **2-1) Présentation du jeu de données**
 
-### **Analyse univariée**
+Pour les informations sur les données, je vous laisse le soin de visiter la page de Kaggle:
+
+<https://www.kaggle.com/datasets/mathchi/diabetes-data-set>
+
+### **2-2) Analyse univariée**
 
 #### **Statistiques descriptives**
 
 ```{r warning=FALSE}
  my_skim <- skim_with(numeric = sfl( p50 = NULL,hist=NULL, n_missing=NULL, complete_rate=NULL)) 
- diabetes_df <- my_skim(df)
+ diabetes_df <- my_skim(df[,-9])
  
  diabetes_df %>%
    select(-skim_type)   %>% 
@@ -55,7 +60,7 @@ df <- read_delim("diabetes.csv", delim = ";",
               numeric.p0 = "Min",numeric.p25="1er Quartile" ,numeric.p75="3ème Quartile" ,
               numeric.p100 = "Max") %>%
    opt_stylize(style = 6, color = "cyan", add_row_striping = TRUE) %>%
-   tab_header(title = "Summary of Variables in the diqbeyes data") 
+   tab_header(title = "Summary of Variables in the diabetes data") 
 ```
 
 L'analyse du tableau nous permet de constater l'absence de valeurs manquantes et des écarts-types généralement élevés, surtout pour la quantité d'Insuline dans le sang.
@@ -102,7 +107,7 @@ gridExtra::grid.arrange(c2,d2,e2,f2,g2,h2,i2,j2)
 
 On peut constater que les variables ont pour la plupart une distribution asymétrique à gauche. C'est à dire que la majorité des valeurs de la variable est supérieure à la valeur moyenne. Il conviendra pour nous de procéder a une standardisation des données pour la suite des analyses
 
-### **Analyse multivariée**
+### **2-3) Analyse multivariée**
 
 Sortons dans un premier temps une matrice de corrélation pour vérifier s'il y a des relations linéaires significatives entre les variables explicatives.
 
@@ -119,11 +124,11 @@ Avec le fonction `ggpairs` de [@GGally] nous allons largement résumer notre ana
 ggpairs(df, aes(colour = Outcome, alpha = 0.4))
 ```
 
-Quand on analyse la densité de chacune des variables repartit suivant **Outcome** , on constate un déphasage entre les courbes de **1** et celles de **0**. En effet ses figures, posées en diagonale, montrent que toutes les variables choisies sont importante dans la détection du diabète. On peut néanmoins remarquer que la quantité de glucose dans le sang et l'age sont des facteurs déterminant du diabète.
+Quand on analyse la densité de chacune des variables repartit suivant **Outcome** , on constate un déphasage entre les courbes de **1** et celles de **0**. En effet ses figures, posées en diagonale, montrent que toutes les variables choisies sont importante dans la détection du diabète. On peut néanmoins remarquer que la quantité de **glucose** dans le sang et l'**age** sont des facteurs très déterminant du diabète.
 
-## **Modélisation**
+## **3-Modélisation**
 
-### **Preprocessing**
+### **3-1) Preprocessing**
 
 Ici, nous allons préparer nos données a être utiliser dans le modèle. La première étape sera la normalisation des données.
 
@@ -155,9 +160,9 @@ train	<-	df[train_indices,	]
 test	<-	df[-train_indices,	]
 ```
 
-### **Entrainement du modèle**
+### **3-2) Entrainement du modèle**
 
-Nous allons faire recourt à la fonction `train` du Package [@caret] pour trouver notre modèle. A l'aide de la recherche aléatoire et de la cross validation nous allons déterminer les paramètres de notre modèle. En effet, la recherche aléatoire est souvent efficace, car elle explore l'espace des hyperparamètres de manière aléatoire plutôt que de manière systématique comme la recherche simple. Cela permet de couvrir une plus grande variété de combinaisons d'hyperparamètres en moins d'itérations.
+Nous allons faire recourt à la fonction `train` pour trouver notre modèle. A l'aide de la recherche aléatoire et de la cross validation nous allons déterminer les paramètres de notre modèle. En effet, la recherche aléatoire est souvent efficace, car elle explore l'espace des hyperparamètres de manière aléatoire plutôt que de manière systématique comme la recherche simple. Cela permet de couvrir une plus grande variété de combinaisons d'hyperparamètres en moins d'itérations.
 
 ```{r}
 grid <- expand.grid( sigma=runif(25,0.1,30) ,  C = runif(25, 0.1, 30))
@@ -184,7 +189,7 @@ On peut voir l'**accuracy** moyen au cours de la recherche de nos paramètres. I
 Maintenant, on va construire le modèle final en utilisant les paramètres précédemment déterminés.
 
 ```{r}
-final_model <- svm(Outcome ~ ., data = train, kernel = 'radial', cost = tuned_model$bestTune$C)
+final_model <- svm(Outcome ~ ., data = train, kernel = 'radial', cost = tuned_model$bestTune$C,probability = TRUE)
 ```
 
 On peut observer la performance du modèle sur les données d'entraînement
@@ -198,7 +203,7 @@ print(paste('Le modèle reussit sa classification à', Accuracy*100,'%'))
 
 Une fois que le modèle est crée, passons à la prédiction sur les données de test.
 
-### **Prédiction et évaluation du modèle**
+### **3-3) Prédiction et évaluation du modèle**
 
 ```{r}
 predictions <- predict(final_model, newdata = test)
@@ -208,8 +213,19 @@ confusionMatrix(matrixx,mode = "everything")
 
 Pour l'évaluation du modèle, on ne va pas utiliser uniquement l'exactitude, communément appelé **Accuracy**, à cause du déséquilibre au niveau des classes dans notre jeu de données: **65% des données sont celles de personnes diabétiques**.
 
-Le **recall** de notre modèle est de **92.16%**. Cela signifie que le modèle arrive à prédire correctement les cas de diabète. Autrement, il y a de forte chance que le modèle prédise le diabète chez quelqu'un qui l'a réellement. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$ $$a=52 $$ %
+Le **recall** de notre modèle est de **92.16%**. Cela signifie que le modèle arrive à prédire correctement les cas de diabète. Autrement, il y a de forte chance que le modèle prédise le diabète chez quelqu'un qui l'a réellement. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$ $$ $$a=52 % $$$$
 
 Globalement le modèle estimé permet d'avoir de bonne prédictions sur l'ensemble de données en prenant comme métrique le **Recall** et la **F1**.
 
-## 
+## 4- Les meilleurs variables prédictives
+
+Grace aux fonctions `explain` et `model_parts` de [@DALEX] nous allons ressortir les variables ayant le plus d'importance dans la conception de notre modèle.
+
+```{r message=FALSE, warning=FALSE}
+ex <- explain(final_model,data=train, y=as.numeric( train$Outcome),predict_function = predict,predict_function_target_column = predictions)
+plot(model_parts(ex))
+```
+
+La variable **Glucose**,**BMI** et **Age** sont les plus importantes dans la constitution de notre modèle. Ce résultat vient confirmer les hypothèses posées au niveau de l'analyse descriptive avec `ggpairs`
+
+## **5-Références**
