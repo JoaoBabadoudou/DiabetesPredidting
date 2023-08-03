@@ -4,8 +4,6 @@ author: "Joao BABADOUDOU"
 date: "`r Sys.Date()`"
 output: 
   pdf_document: 
-    toc: yes
-    number_sections: no
 bibliography: references.bib
 ---
 
@@ -13,7 +11,9 @@ bibliography: references.bib
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 1-Contexte
+\newpage
+
+## **1-Contexte**
 
 Le diabète est un problème de santé publique majeur dans le monde entier, touchant des millions de personnes et ayant un impact significatif sur leur qualité de vie. Dans cette étude nous proposons une approche basée sur les machines a vecteurs de support (SVM) pour détecter la maladie. Pour cela nous allons utiliser des données récupérées sur **Kaggle**, présentant certaines caractéristiques tels que la pression sanguine ou la quantité d'insuline dans le sang de certaines personnes.
 
@@ -36,6 +36,7 @@ df <- read_delim("diabetes.csv", delim = ";",
                                                                                                "1"))), trim_ws = TRUE)
 ```
 
+\newpage
 ## **2-Analyse exploratoire des données**
 
 ### **2-1) Présentation du jeu de données**
@@ -49,7 +50,7 @@ Pour les informations sur les données, je vous laisse le soin de visiter la pag
 #### **Statistiques descriptives**
 
 ```{r warning=FALSE}
- my_skim <- skim_with(numeric = sfl( p50 = NULL,hist=NULL, n_missing=NULL, complete_rate=NULL)) 
+ my_skim <- skim_with(numeric = sfl( p50 = NULL,hist=NULL, n_missing=NULL, complete_rate=NULL,p25=NULL ,p75=NULL)) 
  diabetes_df <- my_skim(df[,-9])
  
  diabetes_df %>%
@@ -57,7 +58,7 @@ Pour les informations sur les données, je vous laisse le soin de visiter la pag
    gt() %>%
    cols_label(
               numeric.mean = "Moyenne", numeric.sd = "Ecart-type",
-              numeric.p0 = "Min",numeric.p25="1er Quartile" ,numeric.p75="3ème Quartile" ,
+              numeric.p0 = "Min" ,
               numeric.p100 = "Max") %>%
    opt_stylize(style = 6, color = "cyan", add_row_striping = TRUE) %>%
    tab_header(title = "Summary of Variables in the diabetes data") 
@@ -126,6 +127,7 @@ ggpairs(df, aes(colour = Outcome, alpha = 0.4))
 
 Quand on analyse la densité de chacune des variables repartit suivant **Outcome** , on constate un déphasage entre les courbes de **1** et celles de **0**. En effet ses figures, posées en diagonale, montrent que toutes les variables choisies sont importante dans la détection du diabète. On peut néanmoins remarquer que la quantité de **glucose** dans le sang et l'**age** sont des facteurs très déterminant du diabète.
 
+\newpage
 ## **3-Modélisation**
 
 ### **3-1) Preprocessing**
@@ -213,19 +215,26 @@ confusionMatrix(matrixx,mode = "everything")
 
 Pour l'évaluation du modèle, on ne va pas utiliser uniquement l'exactitude, communément appelé **Accuracy**, à cause du déséquilibre au niveau des classes dans notre jeu de données: **65% des données sont celles de personnes diabétiques**.
 
-Le **recall** de notre modèle est de **92.16%**. Cela signifie que le modèle arrive à prédire correctement les cas de diabète. Autrement, il y a de forte chance que le modèle prédise le diabète chez quelqu'un qui l'a réellement. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$ $$ $$a=52 % $$$$
+Le **recall** de notre modèle est de **92.16%**. Cela signifie que le modèle arrive à prédire correctement les cas de diabète. Autrement, il y a de forte chance que le modèle prédise le diabète chez quelqu'un qui l'a réellement. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$  $$a=52 %$$  
 
 Globalement le modèle estimé permet d'avoir de bonne prédictions sur l'ensemble de données en prenant comme métrique le **Recall** et la **F1**.
 
-## 4- Les meilleurs variables prédictives
+\newpage
+## **4- Les meilleurs variables prédictives**
 
-Grace aux fonctions `explain` et `model_parts` de [@DALEX] nous allons ressortir les variables ayant le plus d'importance dans la conception de notre modèle.
+Grâce aux fonctions `explain` et `model_parts` de [@DALEX] nous allons ressortir les variables ayant le plus d'importance dans la conception de notre modèle.
 
 ```{r message=FALSE, warning=FALSE}
 ex <- explain(final_model,data=train, y=as.numeric( train$Outcome),predict_function = predict,predict_function_target_column = predictions)
 plot(model_parts(ex))
 ```
 
-La variable **Glucose**,**BMI** et **Age** sont les plus importantes dans la constitution de notre modèle. Ce résultat vient confirmer les hypothèses posées au niveau de l'analyse descriptive avec `ggpairs`
+Les variables **Glucose**,**BMI** et **Age** sont les plus importantes dans la constitution de notre modèle. Ce résultat vient confirmer les hypothèses posées au niveau de l'analyse descriptive avec `ggpairs`
 
+\newpage
 ## **5-Références**
+
+
+
+
+
