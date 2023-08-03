@@ -125,7 +125,7 @@ Avec le fonction `ggpairs` de [@GGally] nous allons largement résumer notre ana
 ggpairs(df, aes(colour = Outcome, alpha = 0.4))
 ```
 
-Quand on analyse la densité de chacune des variables repartit suivant **Outcome** , on constate un déphasage entre les courbes de **1** et celles de **0**. En effet ses figures, posées en diagonale, montrent que toutes les variables choisies sont importante dans la détection du diabète. On peut néanmoins remarquer que la quantité de **glucose** dans le sang et l'**age** sont des facteurs très déterminant du diabète.
+Quand on analyse la densité de chacune des variables repartit suivant **Outcome** , on constate un déphasage entre les courbes de **1** et celles de **0**. En effet ses figures, posées en diagonale, montrent que toutes les variables choisies sont importante dans la détection du diabète. On peut néanmoins remarquer que la quantité de **glucose** dans le sang et l'**age** pourraient être des facteurs très déterminant du diabète.
 
 \newpage
 ## **3-Modélisation**
@@ -155,7 +155,7 @@ Nous allons séparer nos données en deux partie. Réservons 80% pour l'entraîn
 
 split_size	=	0.80
 sample_size	=	floor(split_size	*	nrow(df)) 
-set.seed(123)
+set.seed(563)
 train_indices	<-	sample(seq_len(nrow(df)),	size	=	
                           sample_size)
 train	<-	df[train_indices,	] 
@@ -167,6 +167,7 @@ test	<-	df[-train_indices,	]
 Nous allons faire recourt à la fonction `train` pour trouver notre modèle. A l'aide de la recherche aléatoire et de la cross validation nous allons déterminer les paramètres de notre modèle. En effet, la recherche aléatoire est souvent efficace, car elle explore l'espace des hyperparamètres de manière aléatoire plutôt que de manière systématique comme la recherche simple. Cela permet de couvrir une plus grande variété de combinaisons d'hyperparamètres en moins d'itérations.
 
 ```{r}
+set.seed(023)
 grid <- expand.grid( sigma=runif(25,0.1,30) ,  C = runif(25, 0.1, 30))
 
 
@@ -213,9 +214,9 @@ matrixx <- table(predictions, test$Outcome)
 confusionMatrix(matrixx,mode = "everything")
 ```
 
-Pour l'évaluation du modèle, on ne va pas utiliser uniquement l'exactitude, communément appelé **Accuracy**, à cause du déséquilibre au niveau des classes dans notre jeu de données: **65% des données sont celles de personnes diabétiques**.
+Pour l'évaluation du modèle, on ne va pas utiliser uniquement l'exactitude, communément appelé **Accuracy**, à cause du déséquilibre au niveau des classes dans notre jeu de données: **65% des données sont celles de personnes non  diabétiques**.
 
-Le **recall** de notre modèle est de **92.16%**. Cela signifie que le modèle arrive à prédire correctement les cas de diabète. Autrement, il y a de forte chance que le modèle prédise le diabète chez quelqu'un qui l'a réellement. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$  $$a=52 %$$  
+Le **recall** de notre modèle est de **82.35%**. Cela signifie que le modèle arrive à mieux prédire les cas de personnes sans diabète. Autrement, il y a de faible chance que le modèle se trompe sur le cas d'une personne qui n'a pas le diabète. Cependant le pourcentage de personne classé diabétique à tort est assez élevé. Soit $$a=1- Specificité$$  $$ a=53.41% $$  
 
 Globalement le modèle estimé permet d'avoir de bonne prédictions sur l'ensemble de données en prenant comme métrique le **Recall** et la **F1**.
 
@@ -229,7 +230,7 @@ ex <- explain(final_model,data=train, y=as.numeric( train$Outcome),predict_funct
 plot(model_parts(ex))
 ```
 
-Les variables **Glucose**,**BMI** et **Age** sont les plus importantes dans la constitution de notre modèle. Ce résultat vient confirmer les hypothèses posées au niveau de l'analyse descriptive avec `ggpairs`
+Les variables **Glucose**,**Age** et **BMI** sont les plus importantes dans la constitution de notre modèle. Ce résultat vient confirmer les hypothèses posées au niveau de l'analyse descriptive avec `ggpairs`
 
 \newpage
 ## **5-Références**
